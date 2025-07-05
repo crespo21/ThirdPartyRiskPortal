@@ -8,10 +8,17 @@ class Settings(BaseSettings):
     # Application
     app_name: str = "ThirdPartyRiskPortal"
     app_version: str = "1.0.0"
-    debug: bool = False
+    debug: bool = True  # Temporarily enabled for development
     
     # Database
-    database_url: str = "sqlite:///./tprm.db"
+    database_url: str = "postgresql://tprm_user:tprm_password@localhost:5432/tprm_db"
+    
+    # Individual database components for flexibility
+    db_host: str = "localhost"
+    db_port: int = 5432
+    db_name: str = "tprm_db"
+    db_user: str = "tprm_user"
+    db_password: str = "tprm_password"  # Change this in production!
     
     # Security
     secret_key: str = "your-secret-key-change-in-production"

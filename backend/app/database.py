@@ -9,6 +9,9 @@ from .config import settings
 
 logger = logging.getLogger(__name__)
 
+# Debug logging
+logger.info(f"Connecting to database: {settings.database_url}")
+
 # Database engine configuration
 if settings.database_url.startswith("sqlite"):
     # SQLite configuration for development

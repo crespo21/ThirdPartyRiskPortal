@@ -1,7 +1,7 @@
 import logging
 import time
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 
 import structlog
 from fastapi import FastAPI, HTTPException, Request
@@ -12,7 +12,10 @@ from fastapi.responses import JSONResponse
 from .config import settings
 from .database import init_db
 from .routers import (assessments, auth, company, due_diligence, engagement,
-                      files, scoring, tasks)
+                      files, scoring, tasks, users)
+
+# API Configuration
+API_V1_PREFIX = "/api/v1"
 
 # Configure structured logging
 structlog.configure(
@@ -147,19 +150,20 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={
             "detail": "Internal server error",
             "correlation_id": correlation_id,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     )
 
 # Include API routers
-app.include_router(auth.router, prefix="/api/v1")
-app.include_router(company.router, prefix="/api/v1")
-app.include_router(engagement.router, prefix="/api/v1")
-app.include_router(assessments.router, prefix="/api/v1")
-app.include_router(tasks.router, prefix="/api/v1")
-app.include_router(scoring.router, prefix="/api/v1")
-app.include_router(due_diligence.router, prefix="/api/v1")
-app.include_router(files.router, prefix="/api/v1")
+app.include_router(auth.router, prefix=API_V1_PREFIX)
+app.include_router(users.router, prefix=API_V1_PREFIX)
+app.include_router(company.router, prefix=API_V1_PREFIX)
+app.include_router(engagement.router, prefix=API_V1_PREFIX)
+app.include_router(assessments.router, prefix=API_V1_PREFIX)
+app.include_router(tasks.router, prefix=API_V1_PREFIX)
+app.include_router(due_diligence.router, prefix=API_V1_PREFIX)
+app.include_router(files.router, prefix=API_V1_PREFIX)
+app.include_router(scoring.router, prefix=API_V1_PREFIX)
 
 # Health check endpoint
 @app.get("/health")
@@ -167,7 +171,7 @@ async def health_check():
     """Health check endpoint for monitoring"""
     return {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": settings.app_version,
         "environment": "development" if settings.debug else "production"
     }

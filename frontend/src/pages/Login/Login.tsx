@@ -49,7 +49,7 @@ const Login: React.FC = () => {
       await login(data.username, data.password);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError(err.message ?? 'Login failed');
     }
   };
 

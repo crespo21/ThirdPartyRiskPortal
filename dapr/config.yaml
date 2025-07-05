@@ -26,4 +26,4 @@ spec:
   - name: Actor.Reentrancy
     enabled: true
   - name: HotReload
-    enabled: true 
+    enabled: true

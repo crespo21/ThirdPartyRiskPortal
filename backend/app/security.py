@@ -1,13 +1,19 @@
+from datetime import datetime, timedelta
+
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from fastapi import Depends, HTTPException, status
-from datetime import datetime, timedelta
+from passlib.context import CryptContext
 from pydantic import BaseModel
+
 from .config import settings
 
-SECRET_KEY = settings.SECRET_KEY
-ALGORITHM = settings.JWT_ALGORITHM
-ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
+
+# Password hashing context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
@@ -39,3 +45,11 @@ def verify_token(token: str):
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
     return verify_token(token)
+
+def get_password_hash(password: str) -> str:
+    """Hash a password using bcrypt"""
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against its hash"""
+    return pwd_context.verify(plain_password, hashed_password)

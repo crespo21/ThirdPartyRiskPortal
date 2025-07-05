@@ -9,8 +9,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://tprm_user:tprm_password@postgres:5432/tprm_db
-      - SECRET_KEY=your-secret-key-change-in-production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-tprm_user}:${POSTGRES_PASSWORD:-tprm_password}@postgres:5432/${POSTGRES_DB:-tprm_db}
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
       - AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING}
       - AZURE_STORAGE_ACCOUNT_NAME=${AZURE_STORAGE_ACCOUNT_NAME}
       - AZURE_STORAGE_ACCOUNT_KEY=${AZURE_STORAGE_ACCOUNT_KEY}
@@ -46,9 +46,9 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_DB=tprm_db
-      - POSTGRES_USER=tprm_user
-      - POSTGRES_PASSWORD=tprm_password
+      - POSTGRES_DB=${POSTGRES_DB:-tprm_db}
+      - POSTGRES_USER=${POSTGRES_USER:-tprm_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-tprm_password}
     ports:
       - "5432:5432"
     volumes:
