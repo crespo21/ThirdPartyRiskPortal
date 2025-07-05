@@ -1,0 +1,63 @@
+# Core FastAPI and dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.13.1
+asyncpg==0.29.0
+
+# Authentication and Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+cryptography>=41.0.0,<42.0.0
+
+# Azure Services
+azure-storage-blob==12.19.0
+azure-identity==1.15.0
+azure-keyvault-secrets==4.7.0
+azure-monitor-opentelemetry==1.0.0
+opentelemetry-api==1.21.0
+opentelemetry-sdk==1.21.0
+opentelemetry-instrumentation-fastapi==0.42b0
+opentelemetry-instrumentation-sqlalchemy==0.42b0
+
+# Dapr Integration
+dapr>=1.15.0,<1.16.0
+grpcio==1.59.3
+grpcio-tools==1.59.3
+
+# HTTP and API
+httpx==0.25.2
+requests==2.31.0
+
+# Validation and Serialization
+email-validator==2.1.0
+python-dateutil==2.8.2
+
+# Logging and Monitoring
+structlog==23.2.0
+python-json-logger==2.0.7
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+httpx==0.25.2
+
+# Development and Code Quality
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Environment and Configuration
+python-dotenv==1.0.0
+click==8.1.7
+
+# Additional utilities
+tenacity==8.2.3
+cachetools==5.3.2

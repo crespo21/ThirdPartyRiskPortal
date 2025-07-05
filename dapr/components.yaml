@@ -1,0 +1,65 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore
+  namespace: default
+spec:
+  type: state.redis
+  version: v1
+  metadata:
+  - name: redisHost
+    value: localhost:6379
+  - name: redisPassword
+    value: ""
+  - name: actorStateStore
+    value: "true"
+---
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: pubsub
+  namespace: default
+spec:
+  type: pubsub.redis
+  version: v1
+  metadata:
+  - name: redisHost
+    value: localhost:6379
+  - name: redisPassword
+    value: ""
+---
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: azure-storage-binding
+  namespace: default
+spec:
+  type: bindings.azure.blobstorage
+  version: v1
+  metadata:
+  - name: storageAccount
+    value: "tprmstorage"
+  - name: storageAccessKey
+    secretKeyRef:
+      name: azure-storage-key
+      key: key
+  - name: container
+    value: "tprm-documents"
+---
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: azure-keyvault
+  namespace: default
+spec:
+  type: secretstores.azure.keyvault
+  version: v1
+  metadata:
+  - name: vaultName
+    value: "tprm-keyvault"
+  - name: spnTenantId
+    value: "your-tenant-id"
+  - name: spnClientId
+    value: "your-client-id"
+  - name: spnCertificateFile
+    value: "path/to/certificate.pem" 
