@@ -210,6 +210,7 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = Field(None, max_length=255)
     role: Optional[str] = Field(None, pattern="^(ADMIN|ASSESSOR|APPROVER|USER)$")
     is_active: Optional[bool] = None
+    password: Optional[str] = Field(None, min_length=8)
 
 class UserResponse(UserBase):
     id: int
@@ -221,6 +222,10 @@ class UserResponse(UserBase):
         from_attributes = True
 
 # Authentication Schemas
+class LoginRequest(BaseModel):
+    username: str = Field(..., min_length=1)
+    password: str = Field(..., min_length=1)
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"

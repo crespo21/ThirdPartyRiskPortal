@@ -177,6 +177,47 @@ The ThirdPartyRiskPortal is a comprehensive enterprise-grade platform for managi
 - **Encryption**: End-to-end data encryption
 - **Access Controls**: Granular permission management
 
+## Implementation Details
+
+### Backend Code Organization
+- **Structure**: `backend/app/` contains:
+  - `models.py` (SQLAlchemy models)
+  - `schemas.py` (Pydantic models for request/response)
+  - `routers/` (endpoint modules: `auth.py`, `users.py`, `company.py`, `assessments.py`, `files.py`, etc.)
+  - `database.py` (DB session, engine)
+  - `security.py` (password hashing, JWT utilities)
+  - `config.py` (environment settings via `.env`)
+  - `main.py` (FastAPI app setup, CORS, router registration)
+- **Migrations**: Alembic under `backend/alembic/`, migrated from SQLite to PostgreSQL; uses `alembic.ini` and environment scripts.
+- **Auth**: OAuth2 JWT in `/api/v1/auth` with `/login` and `/me`; secure password hashing; role-based checks.
+- **CORS**: Configured to allow the React frontend origin.
+- **File Upload**: Azure Blob Storage with SAS tokens via `files.py` router; direct client upload flow.
+
+### Frontend Code Organization
+- **Project**: `frontend/src/`
+  - `contexts/AuthContext.tsx` for token management and protected routes
+  - `components/` for reusable UI elements (Layout, Nav, etc.)
+  - `pages/` for views: Dashboard, Companies, Assessments, Documents, Login, Tasks
+  - `services/api.ts` (Axios instance with interceptors)
+  - `App.tsx` and `index.tsx` (routing and app bootstrap)
+- **Libraries**:
+  - React 18, TypeScript, MUI v5
+  - React Router v6, React Hook Form, Yup
+  - TanStack Query for data fetching
+- **Build**: `.env` holds `REACT_APP_API_BASE_URL`; production build in `frontend/build` served by Nginx and Docker.
+
+### Deployment & Environment
+- **Local Dev**: Docker Compose (`docker-compose.yml`) spins up FastAPI, PostgreSQL, Redis, Dapr sidecar, Azurite emulator.
+- **Production**: Azure Container Instances or Web App; Azure Database for PostgreSQL; Azure Blob Storage; Application Gateway for SSL.
+- **Dapr**: Components in `dapr/components.yaml` for pub/sub (Service Bus), state store (Redis), bindings.
+
+### Testing & CI/CD
+- **Backend**: Unit tests with `pytest`, integration tests via TestClient; Alembic migration checks.
+- **Frontend**: Jest + React Testing Library for unit tests; end-to-end tests can be added (Cypress).
+- **CI/CD**: GitHub Actions pipeline for lint, test, build, and deploy to Azure.
+
+---
+
 ## Future Enhancements
 
 ### Planned Features
@@ -190,4 +231,90 @@ The ThirdPartyRiskPortal is a comprehensive enterprise-grade platform for managi
 - **Microservices**: Service decomposition
 - **Event Sourcing**: Event-driven architecture
 - **CQRS**: Command Query Responsibility Segregation
-- **Horizontal Scaling**: Auto-scaling capabilities 
+- **Horizontal Scaling**: Auto-scaling capabilities
+
+## 📊 Architecture Diagrams
+
+### System Architecture
+```mermaid
+graph TB
+    Client[React Frontend<br/>TypeScript + MUI] --> Gateway[Azure Application Gateway]
+    Gateway --> Backend[FastAPI Backend<br/>Python + SQLAlchemy]
+    Gateway --> Frontend[Static Assets<br/>Azure CDN]
+    
+    Backend --> DB[(PostgreSQL<br/>Azure Database)]
+    Backend --> Storage[Azure Blob Storage<br/>Document Vault]
+    Backend --> Insights[Application Insights<br/>Monitoring]
+    Backend --> KeyVault[Azure Key Vault<br/>Secrets]
+    
+    Backend --> Dapr[Dapr Sidecar]
+    Dapr --> Redis[(Redis<br/>State Store)]
+    Dapr --> ServiceBus[Azure Service Bus<br/>Pub/Sub]
+    Dapr --> AML[AML Screening API<br/>External Service]
+    
+    subgraph "Compliance Layer"
+        KYC[KYC Engine]
+        AMLEngine[AML Engine] 
+        Audit[Audit Logger]
+        POPIA[POPIA Controller]
+    end
+    
+    Backend --> KYC
+    Backend --> AMLEngine
+    Backend --> Audit
+    Backend --> POPIA
+```
+
+### Data Flow Architecture
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant D as Dapr
+    participant E as External APIs
+    participant DB as Database
+    
+    U->>F: Upload vendor documents
+    F->>B: POST /api/v1/companies
+    B->>DB: Validate & store company
+    B->>D: Publish KYC event
+    D->>E: Screen against watchlists
+    E->>D: Return risk score
+    D->>B: Update assessment
+    B->>F: Return company ID
+    F->>U: Show success + next steps
+```
+
+### Deployment Architecture
+```mermaid
+graph LR
+    subgraph "Azure South Africa North"
+        subgraph "Production"
+            LB[Load Balancer]
+            FE[Frontend Containers]
+            BE[Backend Containers]
+            DB[(PostgreSQL)]
+        end
+        
+        subgraph "Staging"
+            FE2[Frontend Staging]
+            BE2[Backend Staging]
+            DB2[(PostgreSQL Staging)]
+        end
+    end
+    
+    subgraph "Azure South Africa West"
+        subgraph "Disaster Recovery"
+            FE3[Frontend DR]
+            BE3[Backend DR]
+            DB3[(PostgreSQL DR)]
+        end
+    end
+    
+    GitHub[GitHub Actions] --> FE
+    GitHub --> BE
+    LB --> FE
+    FE --> BE
+    BE --> DB
+```

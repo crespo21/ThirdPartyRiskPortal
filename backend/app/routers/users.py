@@ -60,13 +60,24 @@ def update_user(user_id: int, user_data: UserUpdate, db: Session = Depends(get_d
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     update_data = user_data.model_dump(exclude_unset=True)
+    print(f"Update data: {update_data}")  # Debugging statement
+
+    if "password" in update_data:
+        update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
+
+    if "username" in update_data:
+        existing_user = db.query(User).filter(User.username == update_data["username"]).first()
+        if existing_user and existing_user.id != user_id:
+            raise HTTPException(status_code=400, detail="Username already exists")
+
     for field, value in update_data.items():
         setattr(user, field, value)
-    
+
     db.commit()
     db.refresh(user)
+    print(f"Updated user: {user}")  # Debugging statement
     return user
 
 @router.delete("/{user_id}")

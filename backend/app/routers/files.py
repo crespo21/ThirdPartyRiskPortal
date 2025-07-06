@@ -53,7 +53,7 @@ async def get_upload_url(
         upload_data = azure_storage_service.get_upload_url(file_name, content_type)
         
         # Store document metadata in database
-        document = models.models.Document(
+        document = models.Document(
             file_name=upload_data["blob_name"],
             original_name=file_name,
             blob_name=upload_data["blob_name"],
@@ -79,18 +79,18 @@ async def get_upload_url(
         logger.error(f"Failed to generate upload URL: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate upload URL")
 
-@router.post("/confirm-upload/{document_id}")
+@router.post("/confirm-upload/{document_id}", response_model=dict)
 async def confirm_upload(
     document_id: int,
     file_size: int = Form(...),
-    current_user = Depends(get_current_user),
+    current_user: schemas.UserResponse = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Confirm file upload and update document metadata
     """
     try:
-        document = db.query(models.Document).filter(Document.id == document_id).first()
+        document = db.query(models.Document).filter(models.Document.id == document_id).first()
         if not document:
             raise HTTPException(status_code=404, detail=DOCUMENT_NOT_FOUND)
         
@@ -101,7 +101,7 @@ async def confirm_upload(
         # Update document metadata
         document.file_size = file_size
         document.status = "ACTIVE"
-        document.upload_date = datetime.utcnow()
+        document.upload_date = datetime.now(timezone.utc)
         
         db.commit()
         db.refresh(document)
@@ -113,19 +113,19 @@ async def confirm_upload(
         logger.error(f"Failed to confirm upload: {e}")
         raise HTTPException(status_code=500, detail="Failed to confirm upload")
 
-@router.get("/download/{document_id}")
+@router.get("/download/{document_id}", response_model=dict)
 async def get_download_url(
     document_id: int,
-    current_user = Depends(get_current_user),
+    current_user: schemas.UserResponse = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Get a secure download URL for a document
     """
     try:
-        document = db.query(models.Document).filter(Document.id == document_id).first()
+        document = db.query(models.Document).filter(models.Document.id == document_id).first()
         if not document:
-            raise HTTPException(status_code=404, detail=DOCUMENT_NOT_FOUN)
+            raise HTTPException(status_code=404, detail=DOCUMENT_NOT_FOUND)
         
         # Generate download URL with SAS token
         download_url = azure_storage_service.get_download_url(document.blob_name)
@@ -146,17 +146,17 @@ async def get_download_url(
 async def get_company_documents(
     company_id: int,
     document_type: Optional[str] = None,
-    current_user = Depends(get_current_user),
+    current_user: schemas.UserResponse = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Get all documents for a company
     """
     try:
-        query = db.query(models.Document).filter(Document.company_id == company_id)
+        query = db.query(models.Document).filter(models.Document.company_id == company_id)
         
         if document_type:
-            query = query.filter(Document.document_type == document_type)
+            query = query.filter(models.Document.document_type == document_type)
         
         documents = query.all()
         
@@ -167,19 +167,19 @@ async def get_company_documents(
         logger.error(f"Failed to retrieve company documents: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve documents")
 
-@router.delete("/{document_id}")
+@router.delete("/{document_id}", response_model=dict)
 async def delete_document(
     document_id: int,
-    current_user = Depends(get_current_user),
+    current_user: schemas.UserResponse = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Delete a document (soft delete)
     """
     try:
-        document = db.query(models.Document).filter(Document.id == document_id).first()
+        document = db.query(models.Document).filter(models.Document.id == document_id).first()
         if not document:
-            raise HTTPException(status_code=404, detail="Document not found")
+            raise HTTPException(status_code=404, detail=DOCUMENT_NOT_FOUND)
         
         # Soft delete - mark as deleted
         document.status = "DELETED"
@@ -192,19 +192,19 @@ async def delete_document(
         logger.error(f"Failed to delete document: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete document")
 
-@router.get("/{document_id}/metadata")
+@router.get("/{document_id}/metadata", response_model=dict)
 async def get_document_metadata(
     document_id: int,
-    current_user = Depends(get_current_user),
+    current_user: schemas.UserResponse = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Get document metadata from Azure Storage
     """
     try:
-        document = db.query(models.Document).filter(Document.id == document_id).first()
+        document = db.query(models.Document).filter(models.Document.id == document_id).first()
         if not document:
-            raise HTTPException(status_code=404, detail="Document not found")
+            raise HTTPException(status_code=404, detail=DOCUMENT_NOT_FOUND)
         
         # Get metadata from Azure Storage
         metadata = azure_storage_service.get_blob_metadata(document.blob_name)
@@ -219,10 +219,10 @@ async def get_document_metadata(
         logger.error(f"Failed to retrieve document metadata: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve document metadata")
 
-@router.post("/validate-file")
+@router.post("/validate-file", response_model=dict)
 async def validate_file(
     file: UploadFile = File(...),
-    current_user = Depends(get_current_user)
+    current_user: schemas.UserResponse = Depends(get_current_user)
 ):
     """
     Validate file before upload
